@@ -1,4 +1,5 @@
 import * as Rx from 'rxjs';
+let drawObservableSub = Rx.Subscription.EMPTY;
 interface VisualizeParams {
   src: ArrayBuffer;
   drawMethod: (arr: Uint8Array) => any;
@@ -16,8 +17,8 @@ export function Visualizer({ src, drawMethod, volume, size }: VisualizeParams) {
   analyser.fftSize = size * 2;
   analyser.connect(gainNode);
   // draw
-  let drawObservableSub = Rx.Subscription.EMPTY;
   const visualize = () => {
+    drawObservableSub.unsubscribe();
     const arr = new Uint8Array(analyser.frequencyBinCount);
     drawObservableSub = Rx.interval(0, Rx.animationFrameScheduler).subscribe(() => {
       analyser.getByteFrequencyData(arr);
