@@ -1,58 +1,94 @@
 import React, { useState, useEffect } from 'react';
-import { Visualizer } from './Visualizer';
+import { Visualizer, defaultObservable, VisualizerContext } from './Visualizer';
 import { Viewer, ChartDatum } from './Viewer';
+import './App.css';
+import { throttleTime, tap, map } from 'rxjs/operators';
+const defaultMusicUrl = 'http://47.94.108.47/Levitate.mp3';
 let pause = () => {};
 let resume = () => {};
+
+let visualizerContext = {
+  pause,
+  resume,
+  subject: defaultObservable
+};
 export default function Example(): JSX.Element {
   const [viewData, setViewData] = useState([] as ChartDatum[]);
-  const [url, setUrl] = useState('http://47.94.108.47/Wormhole.mp3');
+  const [url, setUrl] = useState(defaultMusicUrl);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   const setPlayStatus = () => {
     if (isPlaying) {
-      pause();
+      visualizerContext.pause();
       setIsPlaying(false);
     } else {
-      resume();
+      visualizerContext.resume();
       setIsPlaying(true);
     }
   };
   const fetchSrc = (url: string) => {
-    fetch(url)
+    return fetch(url)
       .then(res => res.arrayBuffer())
       .then(data => {
-        setIsPlaying(true);
-        const controlFunc = Visualizer({
+        return Visualizer({
           src: data,
           size: 128,
-          volume: 0.6,
-          drawMethod: data => {
-            const viewList: ChartDatum[] = [];
-            for (let i = 0; i < data.length; i++) {
-              const element = data[i];
-              viewList.push({
-                index: i,
-                volume: element
-              });
-            }
-            // console.log(viewList);
-            setViewData(viewList);
-          }
+          volume: 0.6
         });
-        pause = controlFunc.pause;
-        resume = controlFunc.resume;
       });
   };
   useEffect(() => {
-    !isMounted && fetchSrc(url);
+    if (!isMounted) {
+      setIsLoading(true);
+      fetchSrc(url)
+        .then(context => {
+          visualizerContext = context;
+          context.subject
+            .pipe(
+              map(data => {
+                return data.reduce(
+                  (prev, cur, index) => {
+                    return prev.concat({
+                      index: index + 1,
+                      volume: cur
+                    });
+                  },
+                  [] as ChartDatum[]
+                );
+              })
+            )
+            .subscribe(setViewData);
+          context.subject
+            .pipe(
+              throttleTime(1000),
+              tap(data => {
+                console.log(data);
+              })
+            )
+            .subscribe();
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
     setIsMounted(true);
-  });
+  }, []);
   return (
     <div>
-      <button onClick={() => (setPlayStatus(), fetchSrc(url))}>Click me</button>
-      <button onClick={() => setPlayStatus()}>toggle</button>
+      <button
+        style={{
+          marginRight: '10px',
+          backgroundColor: isLoading ? 'orange' : 'unset'
+        }}
+        onClick={() => (setPlayStatus(), fetchSrc(url))}
+      >
+        {isLoading ? 'loading' : 'load'}
+      </button>
       <input onChange={e => setUrl(e.target.value)} value={url} />
+      <p>
+        <button onClick={() => setPlayStatus()}>toggle</button>
+      </p>
       <Viewer data={viewData} />
     </div>
   );

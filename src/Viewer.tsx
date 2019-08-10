@@ -14,16 +14,24 @@ export function Viewer({ data }: { data: ChartDatum[] }) {
       console.log(`once`);
       const chart = new G2.Chart({
         container: chartContainer,
-        // forceFit: true,
+        forceFit: true,
         height: 400,
-        width: 1200,
-        padding: ['50%', 0, 0] as any
+        // width: 1200,
+        padding: {
+          left: 0,
+          right: 0,
+          bottom: 0,
+          top: 0
+        }
       });
       chart.source(data);
       chart.axis(false);
       chart.legend(false);
       chart.tooltip(false);
-      chart.interval().position('index*volume');
+      chart
+        .line()
+        .position('index*volume')
+        .color('#000');
       chart.render();
       setChart(chart);
       setIsMounted(true);
@@ -36,7 +44,6 @@ export function Viewer({ data }: { data: ChartDatum[] }) {
   return (
     <div
       id="chart"
-      style={{ width: '1200px', height: '400px' }}
       ref={ref => {
         chartContainer = ref!;
       }}

@@ -1,48 +1,62 @@
 import * as Rx from 'rxjs';
-let drawObservableSub = Rx.Subscription.EMPTY;
+import { tap, map, multicast, refCount } from 'rxjs/operators';
 interface VisualizeParams {
   src: ArrayBuffer;
-  drawMethod: (arr: Uint8Array) => any;
   size: number;
   volume: number;
 }
-export function Visualizer({ src, drawMethod, volume, size }: VisualizeParams) {
-  const audioContext = new AudioContext();
-  // gainNode
+
+export interface VisualizerContext {
+  pause: () => void;
+  resume: () => void;
+  subject: Rx.Observable<Uint8Array>;
+}
+export const defaultObservable = Rx.of(new Uint8Array());
+export function Visualizer({ src, volume, size }: VisualizeParams): Promise<VisualizerContext> {
+  let pub = defaultObservable;
+
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  // gainNode 增益
   const gainNode = audioContext.createGain();
   gainNode.gain.value = volume;
   gainNode.connect(audioContext.destination);
-  // analyser
+  // analyser 分析
   const analyser = audioContext.createAnalyser();
   analyser.fftSize = size * 2;
   analyser.connect(gainNode);
   // draw
-  const visualize = () => {
-    drawObservableSub.unsubscribe();
-    const arr = new Uint8Array(analyser.frequencyBinCount);
-    drawObservableSub = Rx.interval(0, Rx.animationFrameScheduler).subscribe(() => {
-      analyser.getByteFrequencyData(arr);
-      drawMethod(arr);
-    });
-  };
-
-  const decodeCallback = (buffer: AudioBuffer) => {
+  const decodeCallback = (buffer: AudioBuffer): VisualizerContext => {
     const bufferSource = audioContext.createBufferSource();
     bufferSource.buffer = buffer;
     bufferSource.loop = true;
     bufferSource.connect(analyser);
     bufferSource.start(0);
-    visualize();
+    const arr = new Uint8Array(analyser.frequencyBinCount);
+    const sub = new Rx.BehaviorSubject(arr);
+    pub = Rx.interval(0, Rx.animationFrameScheduler).pipe(
+      tap(() => {
+        analyser.getByteFrequencyData(arr);
+      }),
+      map(() => {
+        return arr;
+      }),
+      multicast(sub),
+      refCount()
+    );
+    // Rx.interval(0, Rx.animationFrameScheduler).subscribe(() => {
+    //   analyser.getByteFrequencyData(arr);
+    //   // console.log(arr);
+    //   sub.next(arr);
+    // });
+    return {
+      pause: () => {
+        audioContext.suspend();
+      },
+      resume: () => {
+        audioContext.resume();
+      },
+      subject: pub
+    };
   };
-  audioContext.decodeAudioData(src, decodeCallback);
-  return {
-    pause: () => {
-      audioContext.suspend();
-      drawObservableSub.unsubscribe();
-    },
-    resume: () => {
-      audioContext.resume();
-      visualize();
-    }
-  };
+  return audioContext.decodeAudioData(src).then(decodeCallback);
 }
