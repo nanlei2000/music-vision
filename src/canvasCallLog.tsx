@@ -82,6 +82,19 @@ export function canvasCallLog(ctx: any) {
       ctx[key] = withHookBefore(ctx[key], (...args: any[]) => {
         console.log(`${key}(${args.join()})`);
       });
+    } else {
+      const original = Object.getOwnPropertyDescriptor(ctx, key);
+      const storeKey = Symbol('__storeKey__');
+      Object.defineProperty(ctx, key, {
+        ...original,
+        get() {
+          return this[storeKey];
+        },
+        set(value) {
+          console.log(`${key} = ${JSON.stringify(value)}`);
+          this[storeKey] = value;
+        }
+      });
     }
   });
 }

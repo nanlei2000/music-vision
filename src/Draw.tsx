@@ -9,10 +9,10 @@ export class Draw extends Component {
   componentDidMount() {
     this.ctx = this.canvas.getContext('2d')!;
     canvasCallLog.call(this, this.ctx);
-    console.log = function() {
-      console.log.apply(this, [[].slice.call(arguments)]);
-    };
-    console.log(1, 2, 3, 3, 3);
+    // console.log = function() {
+    //   console.log.apply(this, [[].slice.call(arguments)]);
+    // };
+    // console.log(1, 2, 3, 3, 3);
     this.draw4();
   }
   draw1() {
@@ -100,5 +100,8 @@ function roundedRect(
   ctx.quadraticCurveTo(x + width, y, x + width - radius, y);
   ctx.lineTo(x + radius, y);
   ctx.quadraticCurveTo(x, y, x, y + radius);
+  // test
+  ctx.fillStyle = 'deeppink';
+
   ctx.stroke();
 }
