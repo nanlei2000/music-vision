@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { canvasCallLog } from './canvasCallLog';
+import { contextLog } from './canvasCallLog';
 export class Draw extends Component {
   canvas: HTMLCanvasElement = document.createElement('canvas');
   ctx!: CanvasRenderingContext2D;
@@ -8,12 +8,7 @@ export class Draw extends Component {
   }
   componentDidMount() {
     this.ctx = this.canvas.getContext('2d')!;
-    canvasCallLog.call(this, this.ctx);
-    // console.log = function() {
-    //   console.log.apply(this, [[].slice.call(arguments)]);
-    // };
-    // console.log(1, 2, 3, 3, 3);
-    this.draw4();
+    // contextLog(this, Object.getOwnPropertyNames(this.__proto__));
   }
   draw1() {
     console.log(this.ctx);
@@ -101,7 +96,7 @@ function roundedRect(
   ctx.lineTo(x + radius, y);
   ctx.quadraticCurveTo(x, y, x, y + radius);
   // test
-  ctx.fillStyle = 'deeppink';
-
+  var a = ctx.fillStyle;
+  // ctx.fillStyle = 'deeppink';
   ctx.stroke();
 }

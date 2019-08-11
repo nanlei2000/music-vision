@@ -6,7 +6,14 @@ function withHookBefore(originalFn: Function, hookFn: Function) {
     return originalFn.apply(this, arguments);
   };
 }
-const properties = [
+function withHookAfter(originalFn: Function, hookFn: Function) {
+  return function(this: any) {
+    var output = originalFn.apply(this, arguments);
+    hookFn.apply(this, arguments);
+    return output;
+  };
+}
+export const canvasProperties = [
   'canvas',
   'globalAlpha',
   'globalCompositeOperation',
@@ -76,11 +83,18 @@ const properties = [
   'isContextLost'
 ];
 
-export function canvasCallLog(ctx: any) {
+export const contextLog = (ctx: any, properties: string[]) => {
+  let now = Date.now();
+  const getTime = () => {
+    const now_ = Date.now();
+    const diff = now_ - now;
+    now = now_;
+    return `${diff}ms`;
+  };
   properties.forEach(key => {
     if (typeof ctx[key] === 'function') {
       ctx[key] = withHookBefore(ctx[key], (...args: any[]) => {
-        console.log(`${key}(${args.join()})`);
+        console.log(`call ${key}(${args.join()}) ${getTime()}`);
       });
     } else {
       const original = Object.getOwnPropertyDescriptor(ctx, key);
@@ -88,13 +102,16 @@ export function canvasCallLog(ctx: any) {
       Object.defineProperty(ctx, key, {
         ...original,
         get() {
-          return this[storeKey];
+          console.log(
+            `get ${key} : ${JSON.stringify(this[storeKey])} ${getTime()}`
+          );
+          return Reflect.get(ctx, storeKey);
         },
         set(value) {
-          console.log(`${key} = ${JSON.stringify(value)}`);
-          this[storeKey] = value;
+          console.log(`set ${key} = ${JSON.stringify(value)} ${getTime()}`);
+          Reflect.set(ctx, storeKey, value);
         }
       });
     }
   });
-}
+};
