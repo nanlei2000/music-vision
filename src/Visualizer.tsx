@@ -9,11 +9,16 @@ interface VisualizeParams {
 export interface VisualizerContext {
   pause: () => void;
   resume: () => void;
+  close: () => void;
   subject: Rx.Observable<Uint8Array>;
 }
 export const defaultObservable = Rx.of(new Uint8Array());
-export function Visualizer({ src, volume, size }: VisualizeParams): Promise<VisualizerContext> {
-  let pub = defaultObservable;
+export function Visualizer({
+  src,
+  volume,
+  size
+}: VisualizeParams): Promise<VisualizerContext> {
+  let frequency$ = defaultObservable;
 
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
   // gainNode 增益
@@ -33,8 +38,9 @@ export function Visualizer({ src, volume, size }: VisualizeParams): Promise<Visu
     bufferSource.start(0);
     const arr = new Uint8Array(analyser.frequencyBinCount);
     const sub = new Rx.BehaviorSubject(arr);
-    pub = Rx.interval(0, Rx.animationFrameScheduler).pipe(
+    frequency$ = Rx.interval(0, Rx.animationFrameScheduler).pipe(
       tap(() => {
+        console.log(1);
         analyser.getByteFrequencyData(arr);
       }),
       map(() => {
@@ -55,7 +61,11 @@ export function Visualizer({ src, volume, size }: VisualizeParams): Promise<Visu
       resume: () => {
         audioContext.resume();
       },
-      subject: pub
+      close: () => {
+        audioContext.close();
+        sub.unsubscribe();
+      },
+      subject: frequency$
     };
   };
   return audioContext.decodeAudioData(src).then(decodeCallback);
