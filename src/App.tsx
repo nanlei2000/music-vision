@@ -5,7 +5,8 @@ import './App.css';
 import { throttleTime, tap, map } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { Draw } from './Draw';
-const defaultMusicUrl = 'http://47.94.108.47/Levitate.mp3';
+const defaultMusicUrl =
+  'https://raw.githubusercontent.com/nanlei2000/music-src/master/Levitate.mp3';
 let pause = () => {};
 let resume = () => {};
 let close = () => {};
