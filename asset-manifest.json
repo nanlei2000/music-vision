@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/music-vision/static/css/main.1d377785.chunk.css",
-    "main.js": "/music-vision/static/js/main.ee1befe0.chunk.js",
-    "main.js.map": "/music-vision/static/js/main.ee1befe0.chunk.js.map",
+    "main.js": "/music-vision/static/js/main.2bd83b43.chunk.js",
+    "main.js.map": "/music-vision/static/js/main.2bd83b43.chunk.js.map",
     "runtime~main.js": "/music-vision/static/js/runtime~main.b6929dfb.js",
     "runtime~main.js.map": "/music-vision/static/js/runtime~main.b6929dfb.js.map",
-    "static/js/2.8ebc502d.chunk.js": "/music-vision/static/js/2.8ebc502d.chunk.js",
-    "static/js/2.8ebc502d.chunk.js.map": "/music-vision/static/js/2.8ebc502d.chunk.js.map",
+    "static/js/2.90630eae.chunk.js": "/music-vision/static/js/2.90630eae.chunk.js",
+    "static/js/2.90630eae.chunk.js.map": "/music-vision/static/js/2.90630eae.chunk.js.map",
     "index.html": "/music-vision/index.html",
-    "precache-manifest.33a9a47bcba651caeb675d2b9c3a4559.js": "/music-vision/precache-manifest.33a9a47bcba651caeb675d2b9c3a4559.js",
+    "precache-manifest.d62e060909c49e91eed16d03798e7e59.js": "/music-vision/precache-manifest.d62e060909c49e91eed16d03798e7e59.js",
     "service-worker.js": "/music-vision/service-worker.js",
     "static/css/main.1d377785.chunk.css.map": "/music-vision/static/css/main.1d377785.chunk.css.map"
   }
