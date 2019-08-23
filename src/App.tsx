@@ -99,8 +99,8 @@ export default function App(): JSX.Element {
       <p>
         <button onClick={() => setPlayStatus()}>toggle</button>
       </p>
-      {/* <Viewer data={viewData} /> */}
-      <Draw />
+      <Viewer data={viewData} />
+      {/* <Draw /> */}
     </div>
   );
 
