@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Visualizer, defaultObservable, VisualizerContext } from './Visualizer';
 import { Viewer, ChartDatum } from './Viewer';
 import './App.css';
-import { throttleTime, tap, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
-import { Draw } from './Draw';
 const defaultMusicUrl =
   'https://raw.githubusercontent.com/nanlei2000/music-src/master/Levitate.mp3';
 let pause = () => {};
@@ -73,21 +72,22 @@ export default function App(): JSX.Element {
       setIsLoading(false);
     });
   };
-  // useEffect(() => {
-  //   if (!isMounted) {
-  //     setIsLoading(true);
-  //     initVisualizer().finally(() => {
-  //       setIsLoading(false);
-  //     });
-  //   }
-  //   setIsMounted(true);
-  // }, []);
+  useEffect(() => {
+    if (!isMounted) {
+      setIsLoading(true);
+      initVisualizer().finally(() => {
+        setIsLoading(false);
+        setIsPlaying(true);
+      });
+    }
+    setIsMounted(true);
+  }, []);
   return (
     <div>
       <button
         style={{
           marginRight: '10px',
-          backgroundColor: isLoading ? 'orange' : 'unset'
+          backgroundColor: isLoading ? 'orange' : ''
         }}
         onClick={() => {
           handleLoadingUrl();
@@ -95,9 +95,16 @@ export default function App(): JSX.Element {
       >
         {isLoading ? 'loading' : 'load'}
       </button>
-      <input onChange={e => setUrl(e.target.value)} value={url} />
+      <input
+        style={{
+          width: '70%'
+        }}
+        placeholder={'Paste url here,then press load button'}
+        onChange={e => setUrl(e.target.value)}
+        value={url}
+      />
       <p>
-        <button onClick={() => setPlayStatus()}>toggle</button>
+        <button onClick={() => setPlayStatus()}>toggle player status</button>
       </p>
       <Viewer data={viewData} />
       {/* <Draw /> */}

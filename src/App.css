@@ -1,10 +1,16 @@
+* {
+  margin: 0;
+}
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
 body {
   background: #fff;
   /* padding: 10%; */
   box-sizing: border-box;
-  overflow: hidden;
-  height: 100%;
-  width: 1000px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px 10px;
 }
