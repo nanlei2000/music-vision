@@ -1,124 +1,102 @@
-import React, { useState, useEffect } from 'react';
-import { Visualizer, defaultObservable, VisualizerContext } from './Visualizer';
-import { Viewer, ChartDatum } from './Viewer';
+import React from 'react';
+import { Visualizer, VisualizerContext } from './Visualizer';
 import './App.css';
-import { map } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { BarView } from './BarView';
 const defaultMusicUrl =
-  'https://sz.btfs.mail.ftn.qq.com/ftn_handler/3662a85df299326f60ab7ce4c9756169004c294c7574e43a5a1d61fab4fbdeeb8934ffe3a8c7ef85498e46c1f392d63fa5d0a1eade620182d1b7f6a8a1d80ad5?compressed=0&dtype=1&fname=Sunflower.mp3';
-let pause = () => {};
-let resume = () => {};
-let close = () => {};
+  '//m8.music.126.net/21180815163607/04976f67866d4b4d11575ab418904467/ymusic/515a/5508/520b/f0cf47930abbbb0562c9ea61707c4c0b.mp3?infoId=92001';
 const fetchSrc = (url: string) => {
   return fetch(url).then(res => res.arrayBuffer());
 };
 
-let visualizerContext: VisualizerContext = {
-  pause,
-  resume,
-  close,
-  subject: defaultObservable
-};
-const mapFrequencyDataToChart: (
-  value: Uint8Array,
-  index: number
-) => ChartDatum[] = data => {
-  return data.reduce(
-    (prev, cur, index) => {
-      return prev.concat({
-        index: index + 1,
-        volume: cur
-      });
-    },
-    [] as ChartDatum[]
-  );
-};
-
 interface State {
   isLoading: boolean;
-  viewData: ChartDatum[];
+  viewData: Uint8Array;
   url: string;
 }
 
 export class Main extends React.Component<{}, State> {
-  private visualizerSub = Subscription.EMPTY;
+  private visualizerContext!: VisualizerContext;
   private isPlaying = false;
   public state: State = {
     isLoading: false,
-    viewData: [],
+    viewData: new Uint8Array(),
     url: defaultMusicUrl
   };
   private async initVisualizer() {
     const data = await fetchSrc(this.state.url);
-    const context = await Visualizer({
+    try {
+      this.visualizerContext.close();
+    } catch {}
+    this.visualizerContext = await Visualizer({
       src: data,
-      size: 128,
+      size: 1 << 7,
       volume: 0.6
     });
-    visualizerContext = context;
-    this.runVisualize(context);
-  }
-  private runVisualize(context: VisualizerContext) {
-    const sub = context.subject
-      .pipe(map(mapFrequencyDataToChart))
-      .subscribe(data => this.setState({ viewData: data }));
-    // setVisualizerSub(sub);
-    this.visualizerSub = sub;
   }
   private handleLoadingUrl() {
-    visualizerContext.close();
-    this.setState({ isLoading: false });
+    // this.visualizerContext.close();
+    this.setState({ isLoading: true });
     this.initVisualizer().finally(() => {
       this.setState({ isLoading: false });
     });
   }
   private setPlayStatus() {
     if (this.isPlaying) {
-      visualizerContext.pause();
-      this.visualizerSub.unsubscribe();
+      this.visualizerContext.pause();
       this.isPlaying = false;
     } else {
-      visualizerContext.resume();
-      this.runVisualize(visualizerContext);
+      this.visualizerContext.resume();
       this.isPlaying = true;
     }
   }
   public componentDidMount() {
-    this.setState({ isLoading: true });
-    this.initVisualizer().finally(() => {
-      this.setState({ isLoading: false });
-    });
+    this.handleLoadingUrl();
   }
   render() {
-    const { isLoading, viewData, url } = this.state;
+    const { isLoading, url } = this.state;
     return (
-      <div>
-        <button
+      <div
+        style={{
+          height: '100%',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <div
           style={{
-            marginRight: '10px',
-            backgroundColor: isLoading ? 'orange' : ''
-          }}
-          onClick={() => {
-            this.handleLoadingUrl();
+            height: '100px'
           }}
         >
-          {isLoading ? 'loading' : 'load'}
-        </button>
-        <input
-          style={{
-            width: '70%'
-          }}
-          placeholder={'Paste url here,then press load button'}
-          onChange={e => this.setState({ url: e.target.value })}
-          value={url}
-        />
-        <p>
-          <button onClick={() => this.setPlayStatus()}>
-            toggle player status
+          <button
+            style={{
+              marginRight: '10px',
+              backgroundColor: isLoading ? 'orange' : ''
+            }}
+            onClick={() => {
+              this.handleLoadingUrl();
+            }}
+          >
+            {isLoading ? 'loading' : 'load'}
           </button>
-        </p>
-        <Viewer data={viewData} />
+          <input
+            style={{
+              width: '70%'
+            }}
+            placeholder={'Paste url here,then press load button'}
+            onChange={e => this.setState({ url: e.target.value })}
+            value={url}
+          />
+          <p>
+            <button onClick={() => this.setPlayStatus()}>
+              toggle player status
+            </button>
+          </p>
+        </div>
+        {/* <Viewer data={viewData} /> */}
         {/* <Draw /> */}
+        <BarView></BarView>
       </div>
     );
   }

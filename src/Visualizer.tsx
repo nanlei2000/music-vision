@@ -1,5 +1,5 @@
 import * as Rx from 'rxjs';
-import { tap, map, multicast, refCount } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 interface VisualizeParams {
   src: ArrayBuffer;
   size: number;
@@ -10,16 +10,14 @@ export interface VisualizerContext {
   pause: () => void;
   resume: () => void;
   close: () => void;
-  subject: Rx.Observable<Uint8Array>;
+  data: Uint8Array;
 }
-export const defaultObservable = Rx.of(new Uint8Array());
+export const dataSubject = new Rx.Subject<Uint8Array>();
 export function Visualizer({
   src,
   volume,
   size
 }: VisualizeParams): Promise<VisualizerContext> {
-  let frequency$ = defaultObservable;
-
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
   // gainNode 增益
   const gainNode = audioContext.createGain();
@@ -37,23 +35,15 @@ export function Visualizer({
     bufferSource.connect(analyser);
     bufferSource.start(0);
     const arr = new Uint8Array(analyser.frequencyBinCount);
-    const sub = new Rx.BehaviorSubject(arr);
-    frequency$ = Rx.interval(0, Rx.animationFrameScheduler).pipe(
-      tap(() => {
-        // console.log(1);
-        analyser.getByteFrequencyData(arr);
-      }),
-      map(() => {
-        return arr;
-      }),
-      multicast(sub),
-      refCount()
-    );
-    // Rx.interval(0, Rx.animationFrameScheduler).subscribe(() => {
-    //   analyser.getByteFrequencyData(arr);
-    //   // console.log(arr);
-    //   sub.next(arr);
-    // });
+    const sub = Rx.interval(0, Rx.animationFrameScheduler)
+      .pipe(
+        tap(() => {
+          analyser.getByteFrequencyData(arr);
+          dataSubject.next(arr);
+        })
+      )
+      .subscribe();
+    analyser.getByteFrequencyData(arr);
     return {
       pause: () => {
         audioContext.suspend();
@@ -65,7 +55,7 @@ export function Visualizer({
         audioContext.close();
         sub.unsubscribe();
       },
-      subject: frequency$
+      data: arr
     };
   };
   return audioContext.decodeAudioData(src).then(decodeCallback);

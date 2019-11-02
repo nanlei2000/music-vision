@@ -14,3 +14,7 @@ body {
   margin: 0 auto;
   padding: 20px 10px;
 }
+#root {
+  height: 100%;
+  width: 100%;
+}
