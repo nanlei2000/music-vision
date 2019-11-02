@@ -40,7 +40,7 @@ export function Visualizer({
     const sub = new Rx.BehaviorSubject(arr);
     frequency$ = Rx.interval(0, Rx.animationFrameScheduler).pipe(
       tap(() => {
-        console.log(1);
+        // console.log(1);
         analyser.getByteFrequencyData(arr);
       }),
       map(() => {
