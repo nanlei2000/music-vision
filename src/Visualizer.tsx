@@ -1,5 +1,5 @@
 import * as Rx from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, filter } from 'rxjs/operators';
 interface VisualizeParams {
   src: ArrayBuffer;
   size: number;
@@ -13,7 +13,7 @@ export interface VisualizerContext {
   data: Uint8Array;
 }
 export const dataSubject = new Rx.Subject<Uint8Array>();
-export function Visualizer({
+export async function Visualizer({
   src,
   volume,
   size
@@ -28,28 +28,29 @@ export function Visualizer({
   analyser.fftSize = size * 2;
   analyser.connect(gainNode);
   // draw
-  const decodeCallback = (buffer: AudioBuffer): VisualizerContext => {
+  const analyse = (buffer: AudioBuffer): VisualizerContext => {
     const bufferSource = audioContext.createBufferSource();
     bufferSource.buffer = buffer;
     bufferSource.loop = true;
     bufferSource.connect(analyser);
     bufferSource.start(0);
     const arr = new Uint8Array(analyser.frequencyBinCount);
+    let isPause: boolean = false;
     const sub = Rx.interval(0, Rx.animationFrameScheduler)
       .pipe(
+        filter(() => !isPause),
         tap(() => {
           analyser.getByteFrequencyData(arr);
           dataSubject.next(arr);
         })
       )
       .subscribe();
-    analyser.getByteFrequencyData(arr);
     return {
       pause: () => {
-        audioContext.suspend();
+        audioContext.suspend().then(() => (isPause = true));
       },
       resume: () => {
-        audioContext.resume();
+        audioContext.resume().then(() => (isPause = false));
       },
       close: () => {
         audioContext.close();
@@ -58,5 +59,6 @@ export function Visualizer({
       data: arr
     };
   };
-  return audioContext.decodeAudioData(src).then(decodeCallback);
+  const buffer = await audioContext.decodeAudioData(src);
+  return analyse(buffer);
 }

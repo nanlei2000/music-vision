@@ -33,9 +33,9 @@ export class Main extends React.Component<{}, State> {
       size: 1 << 7,
       volume: 0.6
     });
+    this.isPlaying = true;
   }
   private handleLoadingUrl() {
-    // this.visualizerContext.close();
     this.setState({ isLoading: true });
     this.initVisualizer().finally(() => {
       this.setState({ isLoading: false });
@@ -66,7 +66,7 @@ export class Main extends React.Component<{}, State> {
       >
         <div
           style={{
-            height: '100px'
+            height: '60px'
           }}
         >
           <button

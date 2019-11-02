@@ -12,9 +12,14 @@ body {
   /* padding: 10%; */
   box-sizing: border-box;
   margin: 0 auto;
-  padding: 20px 10px;
+  /* padding: 20px 10px; */
 }
 #root {
   height: 100%;
   width: 100%;
+}
+#canvas {
+  background: url(https://p1.music.126.net/gAmIGjlWnYXE_0O8LFp5-w==/109951164382001054.jpg)
+    no-repeat;
+  background-size: cover;
 }
