@@ -1,7 +1,7 @@
 import React from 'react';
 import { tap, throttleTime } from 'rxjs/operators';
-import { dataSubject } from './Visualizer';
 import { Subscription } from 'rxjs';
+import { analyserCtx } from './Main';
 export class BarView extends React.Component<{}, {}> {
   private canvas!: HTMLCanvasElement;
   private subList: Subscription[] = [];
@@ -10,7 +10,7 @@ export class BarView extends React.Component<{}, {}> {
     this.canvas.width = width;
     this.canvas.height = height;
     const ctx = this.canvas.getContext('2d')!;
-    const sub = dataSubject
+    const sub = analyserCtx.subject
       .pipe(
         tap(data => {
           ctx.clearRect(0, 0, width, height);
